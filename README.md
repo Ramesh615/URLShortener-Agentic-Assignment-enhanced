@@ -109,14 +109,7 @@ Follow these steps to set up and run UrlShortener locally.
     ```bash
     npm run dev
     ```
-    The React application should open in your browser at `http://localhost:5173` (or the configured port).
-
-## Screenshots
-  ![alt text](<Images/Login.png>)  
-  ![alt text](<Images/Home.png>)  
-  ![alt text](<Images/About.png>)  
-  ![alt text](<Images/Create_Short_URL.png>)  
-  ![alt text](<Images/Dashboard.png>)  
+    The React application should open in your browser at `http://localhost:5173` (or the configured port)
 
 ## Contribution
 
@@ -203,6 +196,3 @@ The v2 API persists runs, task outputs and audit events in MySQL. All endpoints 
 | POST | `/api/v2/workflows/{id}/approve` | Approve the requirement and current upstream artifact scope |
 | POST | `/api/v2/workflows/{id}/reject` | Reject at the approval gate |
 | POST | `/api/v2/workflows/{id}/replans` | Invalidate stale artifacts and re-plan |
-
-## Production-oriented v2 upgrade
-See [docs/PRODUCTION_UPGRADE.md](docs/PRODUCTION_UPGRADE.md) for implemented v2 controls and explicit production gaps. This is a production-oriented assignment prototype, not a certified production deployment.
