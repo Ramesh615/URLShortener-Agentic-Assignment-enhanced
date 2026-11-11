@@ -1,0 +1,218 @@
+openapi: 3.0.3
+info:
+  title: Agentic Engineering Orchestrator API
+  version: 1.0.0
+  description: Controlled SDLC workflow API for the URL Shortener assignment.
+servers:
+  - url: http://localhost:9090
+security:
+  - bearerAuth: []
+paths:
+  /api/agentic/runs:
+    post:
+      summary: Start an agentic workflow
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [requirement, scenario]
+              properties:
+                requirement: { type: string, minLength: 1 }
+                scenario: { type: string, enum: [GREENFIELD, BROWNFIELD, AMBIGUOUS] }
+      responses:
+        '201': { description: Workflow created; execution pauses at clarification or approval gate }
+        '400': { description: Invalid request }
+  /api/agentic/runs/{runId}:
+    get:
+      summary: Get workflow state, task graph, outputs, decisions and audit trail
+      parameters:
+        - in: path
+          name: runId
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200': { description: Workflow snapshot }
+        '404': { description: Workflow not found }
+  /api/agentic/runs/{runId}/clarify:
+    post:
+      summary: Resolve an ambiguity gate
+      parameters:
+        - in: path
+          name: runId
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [decision, rationale]
+              properties:
+                decision: { type: string }
+                rationale: { type: string }
+      responses:
+        '200': { description: Clarification recorded; workflow advances to approval gate }
+  /api/agentic/runs/{runId}/approve:
+    post:
+      summary: Human approval to execute implementation stage
+      parameters:
+        - in: path
+          name: runId
+          required: true
+          schema: { type: string }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                comment: { type: string }
+      responses:
+        '200': { description: Approved workflow execution result }
+        '409': { description: Workflow is not awaiting approval }
+  /api/agentic/runs/{runId}/reject:
+    post:
+      summary: Reject implementation and stop downstream tasks
+      parameters:
+        - in: path
+          name: runId
+          required: true
+          schema: { type: string }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                comment: { type: string }
+      responses:
+        '200': { description: Rejected workflow snapshot }
+  /api/agentic/runs/{runId}/replan:
+    post:
+      summary: Invalidate prior successful outputs and re-run planning
+      parameters:
+        - in: path
+          name: runId
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [decision, rationale]
+              properties:
+                decision: { type: string }
+                rationale: { type: string }
+      responses:
+        '200': { description: Replanned workflow snapshot }
+  /api/agentic/metrics:
+    get:
+      summary: Get orchestration reliability metrics
+      responses:
+        '200': { description: Run success, latency, retry and rollback counters }
+
+  /api/v2/workflows:
+    post:
+      summary: Create a durable agentic workflow
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [scenario, requirement]
+              properties:
+                scenario: { type: string, enum: [GREENFIELD, BROWNFIELD, AMBIGUOUS] }
+                requirement: { type: string, minLength: 1, maxLength: 12000 }
+      responses:
+        '201': { description: Durable workflow created; pauses at clarification or approval gate }
+        '400': { description: Invalid request }
+  /api/v2/workflows/{id}:
+    get:
+      summary: Read an owner-scoped workflow, DAG, outputs and audit history
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200': { description: Workflow snapshot }
+        '404': { description: Workflow not found for this owner }
+  /api/v2/workflows/metrics:
+    get:
+      summary: Get owner-scoped workflow run counters
+      responses:
+        '200': { description: Run counts, success rate, retry events and safe-stop events }
+  /api/v2/workflows/{id}/approve:
+    post:
+      summary: Approve the exact requirement and pre-approval artifact scope
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200': { description: Workflow approved and post-approval tasks executed }
+        '409': { description: Approval gate is not active or scope changed }
+  /api/v2/workflows/{id}/reject:
+    post:
+      summary: Reject a workflow at the approval gate
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200': { description: Workflow rejected }
+  /api/v2/workflows/{id}/clarifications:
+    post:
+      summary: Record clarification and regenerate upstream artifacts
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [decision]
+              properties:
+                decision: { type: string, minLength: 1, maxLength: 4000 }
+                rationale: { type: string, maxLength: 4000 }
+      responses:
+        '200': { description: Clarification recorded; workflow advances to approval gate }
+  /api/v2/workflows/{id}/replans:
+    post:
+      summary: Invalidate stale outputs and re-run the pre-approval plan
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [decision]
+              properties:
+                decision: { type: string, minLength: 1, maxLength: 4000 }
+                rationale: { type: string, maxLength: 4000 }
+      responses:
+        '200': { description: Replanned workflow }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
