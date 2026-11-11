@@ -1,0 +1,6 @@
+package com.url.shortner.agent.model;
+
+public enum WorkflowStage {
+    REQUIREMENTS, PLANNING, CODEBASE_ANALYSIS, DESIGN, IMPLEMENTATION,
+    TESTING, DOCUMENTATION, RELEASE_READINESS, COMPLETED
+}

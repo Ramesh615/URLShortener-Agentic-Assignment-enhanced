@@ -1,0 +1,41 @@
+services:
+  mysql-db:
+    image: mysql:8.0
+    container_name: shortify-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-shortifydb}
+      MYSQL_USER: ${MYSQL_USER:-shortifyuser}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-shortifypassword}
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  shortify-backend:
+    build: .
+    container_name: shortify-backend
+    ports:
+      - "9090:9090"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/${MYSQL_DATABASE:-shortifydb}
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:-shortifyuser}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-shortifypassword}
+      SPRING_DATASOURCE_DRIVER: com.mysql.cj.jdbc.Driver
+      JPA_DDL_AUTO: validate
+      FLYWAY_ENABLED: "true"
+      # Development-only fallback. Always override JWT_SECRET outside local development.
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET to a Base64-encoded secret of at least 32 bytes}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
+    depends_on:
+      mysql-db:
+        condition: service_healthy
+
+volumes:
+  mysql_data:

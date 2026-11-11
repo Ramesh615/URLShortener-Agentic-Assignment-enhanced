@@ -1,0 +1,22 @@
+CREATE TABLE IF NOT EXISTS users (
+ id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+ username VARCHAR(255) NOT NULL UNIQUE,
+ password VARCHAR(255) NOT NULL,
+ email VARCHAR(255) NOT NULL UNIQUE,
+ role VARCHAR(255) NOT NULL
+);
+CREATE TABLE IF NOT EXISTS url_mapping (
+ id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+ original_url VARCHAR(2048) NOT NULL,
+ short_url VARCHAR(255) NOT NULL UNIQUE,
+ click_count INT NOT NULL,
+ created_date TIMESTAMP(6) NOT NULL,
+ user_id BIGINT,
+ CONSTRAINT fk_url_mapping_user FOREIGN KEY (user_id) REFERENCES users(id)
+);
+CREATE TABLE IF NOT EXISTS click_event (
+ id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+ click_date TIMESTAMP(6) NOT NULL,
+ url_mapping_id BIGINT,
+ CONSTRAINT fk_click_event_mapping FOREIGN KEY (url_mapping_id) REFERENCES url_mapping(id)
+);

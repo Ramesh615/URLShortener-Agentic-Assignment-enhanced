@@ -1,0 +1,2 @@
+package com.url.shortner.agent.v2.domain;
+public enum WorkflowStatus { PLANNING, WAITING_FOR_APPROVAL, RUNNING, WAITING_FOR_CLARIFICATION, COMPLETED, FAILED, SAFE_STOP, REJECTED, CANCELLED }
